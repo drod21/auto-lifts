@@ -1,0 +1,27 @@
+{
+  "version": "5",
+  "dialect": "mysql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "5",
+      "when": 1695645450420,
+      "tag": "0000_closed_kinsey_walden",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1695670494098,
+      "tag": "0001_sudden_preak",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1695739692305,
+      "tag": "0002_tearful_whiplash",
+      "breakpoints": true
+    }
+  ]
+}
