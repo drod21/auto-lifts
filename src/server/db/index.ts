@@ -1,14 +1,10 @@
-import { Client } from "@planetscale/database";
-import { drizzle } from "drizzle-orm/planetscale-serverless";
+import { createClient } from '@supabase/supabase-js';
+import { drizzle } from 'drizzle-orm/postgres-js';
+import { type Database } from './types';
 
 import { env } from "@/env.mjs";
 import * as schema from "./schema";
 
-export const db = drizzle(
-  new Client({
-		url: env.DATABASE_URL,
-		username: env.DATABASE_USERNAME,
-    password: env.DATABASE_PASSWORD,
-  }).connection(),
-  { schema }
-);
+const supabase = createClient<Database>(env.SUPABASE_URL, env.SUPABASE_KEY);
+
+export const db = drizzle(supabase, { schema });
