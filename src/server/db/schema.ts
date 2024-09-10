@@ -1,5 +1,15 @@
-import { pgTable, serial, varchar, timestamp, index, primaryKey, integer, text } from 'drizzle-orm/pg-core';
+import { pgTable, serial, varchar, timestamp, index, primaryKey, integer, text, date } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
+
+export const users = pgTable('user', {
+  id: varchar('id', { length: 255 }).primaryKey(),
+  name: varchar('name', { length: 255 }),
+  email: varchar('email', { length: 255 }).notNull(),
+  emailVerified: timestamp('emailVerified', { mode: 'date' }),
+  image: varchar('image', { length: 255 }),
+}, (table) => ({
+  emailIndex: index('email_idx').on(table.email),
+}));
 
 export const posts = pgTable('post', {
   id: serial('id').primaryKey(),
@@ -10,42 +20,37 @@ export const posts = pgTable('post', {
   nameIndex: index('name_idx').on(table.name),
 }));
 
-export const users = pgTable('user', {
-  id: varchar('id', { length: 255 }).primaryKey(),
-  name: varchar('name', { length: 255 }),
-  email: varchar('email', { length: 255 }).notNull(),
-  emailVerified: timestamp('emailVerified', { withTimezone: true }),
-  image: varchar('image', { length: 255 }),
-});
-
 export const verificationTokens = pgTable('verificationToken', {
   identifier: varchar('identifier', { length: 255 }).notNull(),
   token: varchar('token', { length: 255 }).notNull(),
-  expires: timestamp('expires', { withTimezone: true }).notNull(),
+  expires: timestamp('expires', { mode: 'date' }).notNull(),
 }, (table) => ({
   compoundKey: primaryKey(table.identifier, table.token),
+  tokenIndex: index('token_idx').on(table.token),
 }));
 
 export const exercise = pgTable('exercise', {
   exerciseId: serial('exerciseId').primaryKey(),
   name: varchar('name', { length: 255 }).notNull(),
-  description: varchar('description', { length: 255 }).notNull(),
+  description: text('description').notNull(),
   category: varchar('category', { length: 255 }).notNull(),
   imageUrl: varchar('imageUrl', { length: 255 }).notNull(),
   muscleGroup: varchar('muscleGroup', { length: 255 }),
 }, (table) => ({
-  exerciseIdIdx: index('exerciseId_idx').on(table.exerciseId),
+  nameIndex: index('exercise_name_idx').on(table.name),
+  categoryIndex: index('exercise_category_idx').on(table.category),
 }));
 
 export const workouts = pgTable('workout', {
   workoutId: serial('workoutId').primaryKey(),
-  userId: varchar('userId', { length: 255 }).notNull(),
+  userId: varchar('userId', { length: 255 }).notNull().references(() => users.id),
   name: varchar('name', { length: 255 }).notNull(),
-  description: varchar('description', { length: 255 }).notNull(),
-  createDate: timestamp('createDate', { withTimezone: true }).notNull(),
+  description: text('description').notNull(),
+  createDate: date('createDate').notNull(),
   status: varchar('status', { length: 20 }).notNull(),
 }, (table) => ({
-  workoutIdIdx: index('workoutId_idx').on(table.workoutId),
+  userIdIndex: index('workout_userId_idx').on(table.userId),
+  statusIndex: index('workout_status_idx').on(table.status),
 }));
 
 export const workoutsRelations = relations(workouts, ({ one }) => ({
@@ -53,13 +58,14 @@ export const workoutsRelations = relations(workouts, ({ one }) => ({
 }));
 
 export const completedWorkouts = pgTable('completedWorkouts', {
-  workoutId: integer('workoutId').notNull(),
-  userId: varchar('userId', { length: 255 }).notNull(),
-  completedDate: timestamp('completedDate', { withTimezone: true }).notNull(),
+  workoutId: integer('workoutId').notNull().references(() => workouts.workoutId),
+  userId: varchar('userId', { length: 255 }).notNull().references(() => users.id),
+  completedDate: date('completedDate').notNull(),
   duration: integer('duration').notNull(),
 }, (table) => ({
   compoundKey: primaryKey(table.workoutId, table.userId),
-  completedWorkoutIdIdx: index('completedWorkoutId_idx').on(table.workoutId),
+  userIdIndex: index('completedWorkouts_userId_idx').on(table.userId),
+  completedDateIndex: index('completedWorkouts_date_idx').on(table.completedDate),
 }));
 
 export const completedWorkoutsRelations = relations(completedWorkouts, ({ one }) => ({
@@ -69,14 +75,15 @@ export const completedWorkoutsRelations = relations(completedWorkouts, ({ one })
 
 export const workoutExercises = pgTable('workoutExercise', {
   workoutExerciseId: serial('workoutExerciseId').primaryKey(),
-  workoutId: integer('workoutId').notNull(),
-  exerciseId: integer('exerciseId').notNull(),
+  workoutId: integer('workoutId').notNull().references(() => workouts.workoutId),
+  exerciseId: integer('exerciseId').notNull().references(() => exercise.exerciseId),
   sets: integer('sets').notNull(),
   reps: integer('reps'),
   weight: integer('weight'),
   restTimer: integer('restTimer'),
 }, (table) => ({
-  exerciseWorkoutIdIdx: index('exerciseWorkoutId_idx').on(table.workoutExerciseId),
+  workoutIdIndex: index('workoutExercise_workoutId_idx').on(table.workoutId),
+  exerciseIdIndex: index('workoutExercise_exerciseId_idx').on(table.exerciseId),
 }));
 
 export const workoutExercisesRelations = relations(workoutExercises, ({ one }) => ({
@@ -87,20 +94,22 @@ export const workoutExercisesRelations = relations(workoutExercises, ({ one }) =
 export const programs = pgTable('program', {
   programId: serial('programId').primaryKey(),
   name: varchar('name', { length: 255 }).notNull(),
-  userId: varchar('userId', { length: 255 }).notNull(),
-  description: varchar('description', { length: 255 }).notNull(),
+  userId: varchar('userId', { length: 255 }).notNull().references(() => users.id),
+  description: text('description').notNull(),
   duration: varchar('duration', { length: 255 }).notNull(),
   scheme: varchar('scheme', { length: 255 }).notNull(),
   status: varchar('status', { length: 20 }).notNull(),
 }, (table) => ({
-  programIdIdx: index('programId_idx').on(table.programId),
+  userIdIndex: index('program_userId_idx').on(table.userId),
+  statusIndex: index('program_status_idx').on(table.status),
 }));
 
 export const programWorkouts = pgTable('programWorkout', {
-  programId: integer('programId').notNull(),
-  workoutId: integer('workoutId').notNull(),
+  programId: integer('programId').notNull().references(() => programs.programId),
+  workoutId: integer('workoutId').notNull().references(() => workouts.workoutId),
 }, (table) => ({
   compoundKey: primaryKey(table.programId, table.workoutId),
+  programIdIndex: index('programWorkout_programId_idx').on(table.programId),
 }));
 
 export const programWorkoutsRelations = relations(programWorkouts, ({ one }) => ({
