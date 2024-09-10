@@ -20,7 +20,6 @@ export default async function ExercisePage() {
 
   const { data, error } = await supabase.auth.getUser()
 	const user = data.user;
-
   if (error != null || user == null) {
     redirect('/login')
   }

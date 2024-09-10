@@ -1,14 +1,15 @@
-import { type Config } from "drizzle-kit";
-
-import { env } from "@/env.mjs";
+import type { Config } from 'drizzle-kit';
+import * as dotenv from 'dotenv';
+dotenv.config();
 
 export default {
-  schema: "./src/server/db/schema.ts",
-  driver: "pg",
+  schema: './src/server/db/schema.ts',
+  out: './drizzle',
+  dialect: 'postgresql',
   dbCredentials: {
-    connectionString: env.CONNECTION_STRING,
-		user: env.DATABASE_USER,
-		password: env.DATABASE_PASSWORD,
+    url: process.env.CONNECTION_STRING!,
+		user: process.env.DATABASE_USER!,
+		password: process.env.DATABASE_PASSWORD!
+
   },
-  tablesFilter: ["autolifts_*"],
 } satisfies Config;

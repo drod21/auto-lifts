@@ -4,7 +4,7 @@ import { exercise } from "@/server/db/schema";
 
 export default async function ExercisePage() {
   const selectedExercises = await db.select().from(exercise);
-
+	console.log('here', selectedExercises)
   return (
     <div>
       <h1>Exercises</h1>
