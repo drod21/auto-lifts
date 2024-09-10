@@ -4,10 +4,10 @@ import { env } from "@/env.mjs";
 
 export default {
   schema: "./src/server/db/schema.ts",
-  driver: "mysql2",
+  driver: "pg",
   dbCredentials: {
-    connectionString: env.DATABASE_URL,
-		user: env.DATABASE_USERNAME,
+    connectionString: env.CONNECTION_STRING,
+		user: env.DATABASE_USER,
 		password: env.DATABASE_PASSWORD,
   },
   tablesFilter: ["autolifts_*"],

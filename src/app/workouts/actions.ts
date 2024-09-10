@@ -8,19 +8,21 @@ import {
   workoutExercises,
 } from "@/server/db/schema";
 import type {
+	CompletedWorkout,
   NewCompletedWorkout,
   NewWorkout,
   NewExercise,
-  NewWorkoutExcercise,
+  NewWorkoutExercise,
   WorkoutExercise,
 } from "@/server/db/types";
 
 export const completeWorkout = async (
-  completedWorkout: Omit<NewCompletedWorkout, "completedDate">,
+  completedWorkout: Omit<CompletedWorkout, "completedDate">,
 ) => {
-  const result = await db
+  const result = (await db
     .insert(completedWorkouts)
-    .values({ ...completedWorkout, completedDate: new Date() });
+    .values({ ...completedWorkout, completedDate: new Date().toDateString() }).returning());
+
   return result;
 };
 
@@ -33,13 +35,9 @@ export const createExercise = async (
     description,
     category,
     imageUrl,
-  });
-  const fetchedExercise = await db
-    .select()
-    .from(dbExercise)
-    .where(eq(dbExercise.exerciseId, +result.insertId));
+  }).returning();
 
-  return fetchedExercise;
+  return result;
 };
 export const createWorkout = async (
   workout: NewWorkout,
@@ -47,14 +45,19 @@ export const createWorkout = async (
 ) => {
   const result = await db
     .insert(workouts)
-    .values({ ...workout, createDate: new Date() })
-    .execute();
+    .values({ ...workout, createDate: new Date().toDateString() })
+    .returning();
+		const res = result[0]
 
-  const workoutId = +result.insertId;
-  console.log(exerciseIds);
+		const workoutId = res?.workoutId
+
+  if (!workoutId){
+		throw new Error('oops');
+	}
+
   const mappedExercises = exerciseIds
     .map(
-      (exerciseId): NewWorkoutExcercise => ({
+      (exerciseId): NewWorkoutExercise => ({
         workoutId,
         exerciseId,
         sets: 0,
@@ -75,22 +78,17 @@ export const createWorkout = async (
     );
 
   const mappedResults = await Promise.allSettled(mappedExercises);
-  return { result, mappedResults };
+  return { result: res, mappedResults };
 };
-export const createWorkoutExercise = async (we: NewWorkoutExcercise) => {
-  const result = await db.insert(workoutExercises).values(we).execute();
-  return result;
+export const createWorkoutExercise = async (we: NewWorkoutExercise) => {
+   await db.insert(workoutExercises).values(we);
 };
 export const updateWorkoutExercise = async (we: WorkoutExercise) => {
   const result = await db
     .update(workoutExercises)
     .set(we)
-    .where(eq(workoutExercises.workoutExerciseId, we.workoutExerciseId));
+    .where(eq(workoutExercises.workoutExerciseId, we.workoutExerciseId)).returning();
 
-  const fetchedExercise = await db
-    .select()
-    .from(workoutExercises)
-    .where(eq(workoutExercises.workoutExerciseId, +result.insertId));
 
-  return fetchedExercise;
+  return result;
 };

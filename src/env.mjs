@@ -7,12 +7,16 @@ export const env = createEnv({
    * isn't built with invalid env vars.
    */
   server: {
+		DATABASE_HOST: z.string().min(1),
 		SUPABASE_URL: z.string().url(),
 		SUPABASE_KEY: z.string().min(1),
+		CONNECTION_STRING: z.string().min(1),
+		DATABASE_PORT: z.string().min(1),
+		DATABASE_USER: z.string().min(1),
+		DATABASE_PASSWORD: z.string().min(1),
     NODE_ENV: z
       .enum(["development", "test", "production"])
       .default("development"),
-    CLERK_SECRET_KEY: z.string().min(1),
   },
 
   /**
@@ -21,12 +25,8 @@ export const env = createEnv({
    * `NEXT_PUBLIC_`.
    */
   client: {
-    NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: z.string().min(1),
-    NEXT_PUBLIC_CLERK_SIGN_IN_URL: z.string().min(1),
-    NEXT_PUBLIC_CLERK_SIGN_UP_URL: z.string().min(1),
-    NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL: z.string().min(1),
-    NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL: z.string().min(1),
     // NEXT_PUBLIC_CLIENTVAR: z.string(),
+		NEXT_PUBLIC_SUPABASE_KEY: z.string().min(1)
   },
 
   /**
@@ -34,18 +34,15 @@ export const env = createEnv({
    * middlewares) or client-side so we need to destruct manually.
    */
   runtimeEnv: {
+		DATABASE_HOST: process.env.DATABASE_HOST,
+		DATABASE_PORT: process.env.DATABASE_PORT,
+		DATABASE_USER: process.env.DATABASE_USER,
+		DATABASE_PASSWORD: process.env.DATABASE_PASSWORD,
+		CONNECTION_STRING: process.env.CONNECTION_STRING,
 		SUPABASE_URL: process.env.SUPABASE_URL,
     SUPABASE_KEY: process.env.SUPABASE_KEY,
+    NEXT_PUBLIC_SUPABASE_KEY: process.env.SUPABASE_KEY,
     NODE_ENV: process.env.NODE_ENV,
-    NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY:
-      process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
-    CLERK_SECRET_KEY: process.env.CLERK_SECRET_KEY,
-    NEXT_PUBLIC_CLERK_SIGN_IN_URL: process.env.NEXT_PUBLIC_CLERK_SIGN_IN_URL,
-    NEXT_PUBLIC_CLERK_SIGN_UP_URL: process.env.NEXT_PUBLIC_CLERK_SIGN_UP_URL,
-    NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL:
-      process.env.NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL,
-    NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL:
-      process.env.NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL,
     // NEXT_PUBLIC_CLIENTVAR: process.env.NEXT_PUBLIC_CLIENTVAR,
   },
   /**

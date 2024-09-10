@@ -1,5 +1,4 @@
 "use client";
-import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -14,15 +13,18 @@ import {
 } from "@/components/ui/select";
 import { F } from "@mobily/ts-belt";
 import { type NewWorkout } from "@/server/db/types";
-import { useState } from "react";
+import { use, useState } from "react";
 import { type GroupedExercises } from "./page";
 import ExerciseSelections from "./exercise-selections";
+import { createClient } from '@/supabase/browserClient';
 
 export default function CreateForm({
   exercises,
 }: {
   exercises: GroupedExercises;
 }) {
+	const client = createClient()
+	const {data: { user}} = use(client.auth.getUser())
   const [selectedExerciseIds, setSelectedExerciseIds] = useState<number[]>([]);
   const addId = (id: number) =>
     setSelectedExerciseIds((prevIds) => [...new Set([...prevIds, id])]);
@@ -30,12 +32,11 @@ export default function CreateForm({
     setSelectedExerciseIds((prevIds) =>
       prevIds.filter((prevId) => prevId !== id),
     );
-  const user = useUser();
   const router = useRouter();
   if (!user) {
     router.push("/sign-in");
   }
-  const userId = F.coerce<string>(user.user?.id);
+  const userId = F.coerce<string>(user?.id);
 
   const handleSubmit = async (values: FormData) => {
     const status = values.get("status");
@@ -49,7 +50,7 @@ export default function CreateForm({
     });
 
     const { result } = await createWorkout(workout, selectedExerciseIds);
-    router.push(`/workouts/${result.insertId}`);
+    router.push(`/workouts/${result.workoutId}`);
 
     // console.log(new FormData(e.target as HTMLFormElement));
     // Handle form submission logic here

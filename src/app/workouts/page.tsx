@@ -1,5 +1,3 @@
-import { currentUser } from "@clerk/nextjs";
-import { type User } from "@clerk/nextjs/api";
 import { eq } from "drizzle-orm";
 import { db } from "@/server/db";
 import { workouts as userWorkouts } from "@/server/db/schema";
@@ -14,13 +12,19 @@ import {
 } from "@/components/ui/table";
 import Link from "next/link";
 import { baseNavClassName } from "@/components/nav-utils";
+import { createClient } from '@/server/client';
+import { redirect } from 'next/navigation';
 
 export default async function ExercisePage() {
-  const user = await currentUser();
-  const hasUser = (user: User | null): user is User => user !== null;
-  if (!hasUser(user)) {
-    return <div>Not logged in</div>;
+  const supabase = createClient()
+
+  const { data, error } = await supabase.auth.getUser()
+	const user = data.user;
+
+  if (error != null || user == null) {
+    redirect('/login')
   }
+
 
   const workouts = await db
     .select()
@@ -60,7 +64,7 @@ export default async function ExercisePage() {
                 </Link>
               </TableCell>
               <TableCell>{workout.description}</TableCell>
-              <TableCell>{workout.createDate.toISOString()}</TableCell>
+              <TableCell>{workout.createDate.toString()}</TableCell>
             </TableRow>
           ))}
         </TableBody>
